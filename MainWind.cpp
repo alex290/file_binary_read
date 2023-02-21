@@ -15,27 +15,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case ON_MenuFileOpen:
-			MessageBox(hwnd, L"Меню", L"gfdgfd", MB_OK);
+			MessageBox(hwnd, L"Меню", L"Сообщение", MB_OK);
 			break;
 		default:
 			break;
 		}
+		break;
 
-	case WM_PAINT:
-	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hwnd, &ps);
-
-		// All painting occurs here, between BeginPaint and EndPaint.
-
-		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
-
-		EndPaint(hwnd, &ps);
+	default: return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
-	return 0;
-
-	}
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	
 }
 
 // Создаем верхнее меню
