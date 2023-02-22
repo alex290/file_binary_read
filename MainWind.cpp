@@ -1,18 +1,5 @@
 #include "MainWind.h"
 
-MainWind::MainWind(HWND hWnd) : hWnd_(hWnd)
-{
-
-}
-
-MainWind::~MainWind()
-{
-	// MessageBox(hwnd, L"Меню", L"Сообщение", MB_OK);
-}
-
-
-
-
 // Создаем верхнее меню
 void MainMenu(HWND hWnd)
 {
@@ -36,18 +23,19 @@ void AddTextWidgets(HWND hWnd)
 
 	const wchar_t CLASS_NAME[] = L"static";
 
-	CreateWindowEx(
-		0,									// Optional window styles.
-		L"static",							// Window class
+	// CreateWindowA(L"static", L"Текстовое поле", WS_VISIBLE | WS_CHILD, 10, 10, 400, 50, hWnd, NULL, NULL, NULL, NULL);
+
+	tStFil = CreateWindowExW(
+		0,										// Optional window styles.
+		L"edit",								// Window class
 		L"Текстовое поле",						// Заголовок окна
-		WS_VISIBLE | WS_CHILD,   // Window style
+		WS_VISIBLE | WS_CHILD | ES_READONLY | ES_MULTILINE | WS_VSCROLL,   // Window style
 
 		// Size and position
-		5, 5, (rect.right - rect.left) - 25, (rect.bottom - rect.top) - 80,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 
 		hWnd,						// Parent window    
-		//NULL,						// Menu
-		(HMENU)(int)ID_TEXT_WIDG,	// ID Виджета
+		NULL,						// Menu
 		NULL,						// Instance handle
 		NULL);						// Additional application data
 }
@@ -71,13 +59,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case ON_MenuFileOpen:
 			MessageBox(hwnd, L"Меню", L"Сообщение", MB_OK);
 			break;
+
+		case ON_MenuFileClose:
+			SetWindowTextW(tStFil, L"");
+			break;
 		default:
 			break;
 		}
 		break;
 	case WM_SIZE:   // Изменение размера основного окна
 		GetClientRect(hwnd, &rcClient);
-		EnumChildWindows(hwnd, EnumChildProc, (LPARAM)&rcClient);
+		// EnumChildWindows(hwnd, EnumChildProc, (LPARAM)&rcClient);
+		MoveWindow(tStFil, 5, 5, (rcClient.right - rcClient.left) - 10, (rcClient.bottom - rcClient.top) - 25, TRUE);
 		return 0;
 
 	case WM_PAINT:
@@ -96,27 +89,3 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 }
 
-BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam)
-{
-	LPRECT rcParent;
-	int  idChild;
-
-	// Извлеките идентификатор дочернего окна. 
-	// Используйте его, чтобы задать положение дочернего окна.
-
-	idChild = GetWindowLong(hwndChild, GWL_ID);
-
-	if (idChild == ID_TEXT_WIDG)
-	{
-		// Измените размер и положение дочернего окна.
-
-		rcParent = (LPRECT)lParam;
-		MoveWindow(hwndChild,5, 5, (rcParent->right - rcParent->left) - 10, (rcParent->bottom - rcParent->top) - 10, TRUE);
-
-		// Убедитесь, что дочернее окно видно.
-
-		ShowWindow(hwndChild, SW_SHOW);
-	}
-
-	return TRUE;
-}
