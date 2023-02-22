@@ -55,7 +55,6 @@ void AddTextWidgets(HWND hWnd)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	RECT rcClient;
-	// static 
 	switch (uMsg)
 	{
 	case WM_DESTROY:
@@ -85,7 +84,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		PAINTSTRUCT ps;
 		HDC hdc = BeginPaint(hwnd, &ps);
-		// MoveWindow()
 
 		FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
 
@@ -103,19 +101,19 @@ BOOL CALLBACK EnumChildProc(HWND hwndChild, LPARAM lParam)
 	LPRECT rcParent;
 	int  idChild;
 
-	// Retrieve the child-window identifier. Use it to set the 
-	// position of the child window. 
+	// Извлеките идентификатор дочернего окна. 
+	// Используйте его, чтобы задать положение дочернего окна.
 
 	idChild = GetWindowLong(hwndChild, GWL_ID);
 
 	if (idChild == ID_TEXT_WIDG)
 	{
-		// Size and position the child window.  
+		// Измените размер и положение дочернего окна.
 
 		rcParent = (LPRECT)lParam;
 		MoveWindow(hwndChild,5, 5, (rcParent->right - rcParent->left) - 10, (rcParent->bottom - rcParent->top) - 10, TRUE);
 
-		// Make sure the child window is visible. 
+		// Убедитесь, что дочернее окно видно.
 
 		ShowWindow(hwndChild, SW_SHOW);
 	}
