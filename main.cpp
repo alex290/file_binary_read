@@ -5,8 +5,6 @@
 #include "MainWind.h"
 
 
-
-
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
 	// Register the window class.
@@ -42,17 +40,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		return 0;
 	}
 
+
 	ShowWindow(hwnd, nCmdShow);
 
 	// Run the message loop.
 
 	MSG msg = { };
+	
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-
+	
+	
 	return 0;
 }
 
