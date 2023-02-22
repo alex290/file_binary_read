@@ -28,7 +28,7 @@ void AddTextWidgets(HWND hWnd)
 	tStFil = CreateWindowExW(
 		0,										// Optional window styles.
 		L"edit",								// Window class
-		L"Текстовое поле",						// Заголовок окна
+		L"",						// Заголовок окна
 		WS_VISIBLE | WS_CHILD | ES_READONLY | ES_MULTILINE | WS_VSCROLL,   // Window style
 
 		// Size and position
@@ -57,7 +57,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		switch (wParam)
 		{
 		case ON_MenuFileOpen:
-			MessageBox(hwnd, L"Меню", L"Сообщение", MB_OK);
+			SetWindowTextW(tStFil, L"Новое сообщение");
 			break;
 
 		case ON_MenuFileClose:
