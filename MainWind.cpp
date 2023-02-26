@@ -138,6 +138,7 @@ bool ReadFromFiles(LPWSTR path)
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static UINT64 ullNumLines;
+	wchar_t* wc;
 	RECT rcClient;
 	switch (uMsg)
 	{
@@ -158,9 +159,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				break;	
 			}
-			wchar_t m_reportFileName[256];
-			swprintf_s(m_reportFileName, L"%d", u_sizeFile);
-			MessageBox(hwnd, m_reportFileName, L"New", MB_OK);
+			// wchar_t m_reportFileName[256];
+			//swprintf_s(m_reportFileName, L"%d", u_sizeFile);
+			wc = new wchar_t[u_sizeFile];
+			mbstowcs(wc, lpcBuffer, u_sizeFile);
+			SetWindowTextW(tStFil, wc);
+			// MessageBox(hwnd, m_reportFileName, L"New", MB_OK);
 			break;
 
 		case ON_MenuFileClose:

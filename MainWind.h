@@ -27,4 +27,6 @@ bool OpenFile(HWND hWnd, UINT64* ullNumLines); // Открываем файл
 bool ReadFromFiles(LPWSTR path); // Чтение данных с файла
 
 
+
+
 LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
