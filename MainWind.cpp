@@ -1,15 +1,17 @@
-#include "MainWind.h"
+п»ї#include "MainWind.h"
 
-// Создаем верхнее меню
+
+
+// РЎРѕР·РґР°РµРј РІРµСЂС…РЅРµРµ РјРµРЅСЋ
 void MainMenu(HWND hWnd)
 {
 	HMENU RootMenu = CreateMenu();
 	HMENU FileSubMenu = CreateMenu();
 
-	AppendMenu(FileSubMenu, MF_STRING, ON_MenuFileOpen, L"Открыть файл");  // Создаем раздел Файл
-	AppendMenu(FileSubMenu, MF_STRING, ON_MenuFileClose, L"Закрыть файл"); // Создаем раздел Файл
+	AppendMenu(FileSubMenu, MF_STRING, ON_MenuFileOpen, L"РћС‚РєСЂС‹С‚СЊ С„Р°Р№Р»");  // РЎРѕР·РґР°РµРј СЂР°Р·РґРµР» Р¤Р°Р№Р»
+	AppendMenu(FileSubMenu, MF_STRING, ON_MenuFileClose, L"Р—Р°РєСЂС‹С‚СЊ С„Р°Р№Р»"); // РЎРѕР·РґР°РµРј СЂР°Р·РґРµР» Р¤Р°Р№Р»
 
-	AppendMenu(RootMenu, MF_POPUP, (UINT_PTR)FileSubMenu, L"Файл");
+	AppendMenu(RootMenu, MF_POPUP, (UINT_PTR)FileSubMenu, L"Р¤Р°Р№Р»");
 
 	SetMenu(hWnd, RootMenu);
 }
@@ -23,12 +25,12 @@ void AddTextWidgets(HWND hWnd)
 
 	const wchar_t CLASS_NAME[] = L"static";
 
-	// CreateWindowA(L"static", L"Текстовое поле", WS_VISIBLE | WS_CHILD, 10, 10, 400, 50, hWnd, NULL, NULL, NULL, NULL);
+	// CreateWindowA(L"static", L"РўРµРєСЃС‚РѕРІРѕРµ РїРѕР»Рµ", WS_VISIBLE | WS_CHILD, 10, 10, 400, 50, hWnd, NULL, NULL, NULL, NULL);
 
 	tStFil = CreateWindowExW(
 		0,										// Optional window styles.
 		L"edit",								// Window class
-		L"",						// Заголовок окна
+		L"",						// Р—Р°РіРѕР»РѕРІРѕРє РѕРєРЅР°
 		WS_VISIBLE | WS_CHILD | ES_READONLY | ES_MULTILINE | WS_VSCROLL,   // Window style
 
 		// Size and position
@@ -40,8 +42,102 @@ void AddTextWidgets(HWND hWnd)
 		NULL);						// Additional application data
 }
 
+// РћС‚РєСЂС‹РІР°РµРј С„Р°Р№Р»
+bool OpenFile(HWND hWnd, UINT64* ullNumLines)
+{
+	if (lpcBuffer != NULL)
+	{
+		UnmapViewOfFile(lpcBuffer);
+		lpcBuffer = NULL;
+	}
+
+	RECT rect;
+	OPENFILENAMEW OpFileName;
+	WCHAR FileName[MAX_PATH] = { 0 };
+
+	ZeroMemory(&OpFileName, sizeof(OpFileName));
+	OpFileName.lStructSize = sizeof(OpFileName);
+	OpFileName.hwndOwner = hWnd;
+	OpFileName.lpstrFile = FileName;
+	OpFileName.nMaxFile = sizeof(FileName);
+	// OpFileName.lpstrFilter = L"*.*";
+	OpFileName.lpstrFileTitle = NULL;
+	OpFileName.nMaxFileTitle = 0;
+	OpFileName.lpstrInitialDir = NULL;
+	OpFileName.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+
+	if (GetOpenFileNameW(&OpFileName))
+	{
+		if (!ReadFromFiles(FileName))
+		{
+			MessageBoxW(hWnd, L"File could not open!", L"ERROR", MB_OK);
+			return false;
+		}
+	}
+	long double ldNumLines = ceill(long double(u_sizeFile) / NUMBER_OF_SYMBOLS_PER_LINE);
+	*ullNumLines = (UINT64)ldNumLines;
+	GetClientRect(hWnd, &rect);
+	InvalidateRect(hWnd, &rect, TRUE);
+	return true;
+}
+
+
+// Р§С‚РµРЅРёРµ РґР°РЅРЅС‹С… СЃ С„Р°Р№Р»Р°
+bool ReadFromFiles(LPWSTR path)
+{
+	HANDLE FileToRead = CreateFileW(path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+
+	if (FileToRead == INVALID_HANDLE_VALUE)
+	{
+		return false;
+	}
+
+	HANDLE hFileMap = CreateFileMapping(FileToRead, NULL, PAGE_READONLY, 0, 0, NULL);
+
+	if (hFileMap == NULL)
+	{
+		CloseHandle(FileToRead);
+		return false;
+	}
+
+	g_BottomOffset = g_uiGranularity;
+
+	DWORD dwFileSizeHigh = 0;
+
+	u_sizeFile = GetFileSize(FileToRead, &dwFileSizeHigh);
+	u_sizeFile += (((ULONGLONG)dwFileSizeHigh) << 32);
+
+	CloseHandle(FileToRead);
+
+	ULONGLONG ullFileOffset = 0;
+	DWORD dwBytesInBlock = g_uiGranularity;
+
+	if (u_sizeFile < g_uiGranularity)
+	{
+		dwBytesInBlock = (DWORD)u_sizeFile;
+	}
+
+	PVOID MappedMemory = MapViewOfFile(hFileMap,
+		FILE_MAP_READ,
+		(DWORD)(ullFileOffset >> 32),
+		(DWORD)(ullFileOffset & 0xFFFFFFFF),
+		dwBytesInBlock
+	);
+
+
+
+	lpcBuffer = (LPCSTR)MappedMemory;
+
+	CloseHandle(hFileMap);
+
+	return true;
+}
+
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static UINT64 ullNumLines;
 	RECT rcClient;
 	switch (uMsg)
 	{
@@ -53,11 +149,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		MainMenu(hwnd);
 		AddTextWidgets(hwnd);
 
-	case WM_COMMAND: // Обработка комманд
+	case WM_COMMAND: // РћР±СЂР°Р±РѕС‚РєР° РєРѕРјРјР°РЅРґ
 		switch (wParam)
 		{
 		case ON_MenuFileOpen:
-			SetWindowTextW(tStFil, L"Новое сообщение");
+			SetWindowTextW(tStFil, L"");
+			if (!OpenFile(hwnd, &ullNumLines))
+			{
+				break;	
+			}
+			wchar_t m_reportFileName[256];
+			swprintf_s(m_reportFileName, L"%d", u_sizeFile);
+			MessageBox(hwnd, m_reportFileName, L"New", MB_OK);
 			break;
 
 		case ON_MenuFileClose:
@@ -67,7 +170,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		break;
-	case WM_SIZE:   // Изменение размера основного окна
+	case WM_SIZE:   // РР·РјРµРЅРµРЅРёРµ СЂР°Р·РјРµСЂР° РѕСЃРЅРѕРІРЅРѕРіРѕ РѕРєРЅР°
 		GetClientRect(hwnd, &rcClient);
 		// EnumChildWindows(hwnd, EnumChildProc, (LPARAM)&rcClient);
 		MoveWindow(tStFil, 5, 5, (rcClient.right - rcClient.left) - 10, (rcClient.bottom - rcClient.top) - 25, TRUE);
